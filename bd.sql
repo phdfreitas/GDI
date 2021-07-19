@@ -764,6 +764,20 @@ SELECT cargo, salario_bruto_mensal FROM CONTRATO
 SELECT nome, cpf FROM PESSOA_FISICA
     WHERE id_pessoa_fisica IN (14, 25, 16, 18);
 
+-- ALL
+SELECT id_funcionario, id_empresa_func FROM FUNCIONARIO
+    WHERE numero_departamento <= ALL (SELECT numero FROM DEPARTAMENTO 
+        WHERE data_criacao != '19-JULY-2021');
+
+SELECT salario_bruto_mensal FROM CONTRATO
+	WHERE salario_bruto_mensal < ALL (SELECT salario_bruto_mensal  
+	    FROM CONTRATO WHERE numero_contrato < 20);
+
+-- ANY
+SELECT id_funcionario, id_empresa_func FROM FUNCIONARIO
+    WHERE numero_departamento < ANY (SELECT numero FROM DEPARTAMENTO 
+        WHERE data_criacao != '19-JULY-2021');
+
 -- LIKE
 SELECT nome FROM PESSOA_FISICA
     WHERE nome LIKE 'A%';
@@ -810,6 +824,21 @@ SELECT nome, data_de_nascimento FROM PESSOA_FISICA
 -- GROUP BY
 SELECT situacao, COUNT(*) FROM DEPARTAMENTO GROUP BY situacao;
 
+-- Having
+SELECT agencia, COUNT(*) AS quant FROM CONTA_BANCARIA
+    GROUP BY agencia HAVING COUNT(*) > 1;
+
+-- UNION
+SELECT cep FROM ENDERECO WHERE cep IS NOT NULL 
+    UNION (SELECT cep FROM PESSOA); 
+
+-- VIEW
+CREATE VIEW Pag AS 
+    SELECT P.data_pagamento, F.nome FROM PAGAMENTO P, PESSOA_FISICA F
+	    WHERE F.id_pessoa_fisica = P.funcionario;
+	
+SELECT* FROM Pag;
+
 -- SUBCONSULTA
 SELECT * FROM FUNCIONARIO WHERE id_empresa_func =
     (SELECT id_pessoa_empresa FROM EMPRESA WHERE id_pessoa_empresa % 2 = 0);
@@ -818,11 +847,14 @@ SELECT * FROM FUNCIONARIO WHERE id_empresa_func =
 SELECT * FROM FUNCIONARIO WHERE numero_departamento =
     (SELECT numero_departamento FROM DEPARTAMENTO WHERE nome IN ('FINANÇAS', 'MARKETING');
 
--- SUBCONSULTA ALL
-SELECT * FROM FUNCIONARIO WHERE numero_contrato_func =
-    (SELECT numero_contrato FROM CONTRATO WHERE salario_bruto_mensal 
-        > ALL (SELECT salario_bruto_mensal FROM CONTRATO WHERE tipo_contrato != 'ESTÁGIO');
+-- GRANT
+GRANT SELECT ON ENDERECO TO user1;
+GRANT SELECT ON PESSOA TO user1;
+GRANT SELECT ON CONTRATO TO user2;
+GRANT SELECT ON FUNCIONARIO TO user2;
 
+-- ALTER
+ALTER TABLE PESSOA ADD (sexo CHAR(1));
 
 -- PL/SQL
 -- RECORD
