@@ -524,10 +524,10 @@ INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 7, 'COMERCIAL', '09-JUN
 INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 7, 'FINANÇAS', '03-JULY-2004', 'A');
 -- EMPRESA 8
 INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 8, 'CONTROLE DE QUALIDADE', '16-APR-2005', 'A');
-INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 8, 'PESQUISA E DESENVOLVIMENTO', '03-MAY-2005', 'A');
+INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 8, 'PESQUISA E DESENVOLVIMENTO', '03-MAY-2005', 'I');
 -- EMPRESA 9
 INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 9, 'COMUNICAÇÃO', '02-JAN-1984', 'A');
-INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 9, 'FINANÇAS', '03-SEP-1984', 'A');
+INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 9, 'FINANÇAS', '03-SEP-1984', 'I');
 -- EMPRESA 10
 INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 10, 'COMUNICAÇÃO', '14-NOV-2001', 'A');
 INSERT INTO DEPARTAMENTO VALUES(seqDepartamento.nextval, 10, 'COMERCIAL', '13-DEC-2011', 'A');
@@ -725,3 +725,186 @@ INSERT INTO PAGAMENTO VALUES(2, 19, '20-MAY-2021');
 INSERT INTO PAGAMENTO VALUES(2, 19, '20-JUN-2021');
 INSERT INTO PAGAMENTO VALUES(2, 19, '20-JULY-2021');
 INSERT INTO PAGAMENTO VALUES(2, 20, '20-MAY-2021');
+
+-- SQL
+--INDEX
+CREATE INDEX payment_index ON PAGAMENTO(data_pagamento);
+
+--UPDATE
+UPDATE PESSOA_FISICA SET nome = 'JULIANA CRISTINA DE SOUZA'
+    WHERE id_pessoa_fisica = 30;
+
+UPDATE CONTRATO SET jornada_trabalho_semanal = 25
+    WHERE numero_contrato = 16;
+
+UPDATE DEPARTAMENTO SET nome = 'MARKETING' 
+    WHERE numero = 20;
+
+--DELETE
+DELETE FROM PARTICIPACAO WHERE socio = 16;
+
+-- SELECT SIMPLES
+SELECT numero_contrato, tipo_contrato, cargo 
+    FROM CONTRATO WHERE salario_bruto_mensal >= 2000;
+
+SELECT id_empresa_dep, nome, situacao FROM DEPARTAMENTO
+    WHERE situacao = 'I';
+
+-- BETWEEN
+SELECT nome, situacao, data_criacao FROM DEPARTAMENTO
+    WHERE data_criacao BETWEEN '01-JAN-2010' AND '17-JULY-2021';
+
+SELECT nome, cpf, data_de_nascimento FROM PESSOA_FISICA
+    WHERE data_de_nascimento BETWEEN '11-NOV-1999' AND '31-DEC-2002';
+
+SELECT cargo, salario_bruto_mensal FROM CONTRATO
+    WHERE salario_bruto_mensal BETWEEN '1500' AND '5000';
+
+-- IN
+SELECT nome, cpf FROM PESSOA_FISICA
+    WHERE id_pessoa_fisica IN (14, 25, 16, 18);
+
+-- LIKE
+SELECT nome FROM PESSOA_FISICA
+    WHERE nome LIKE 'A%';
+
+SELECT cep, rua, estado FROM ENDERECO
+    WHERE cep LIKE '%4';
+
+-- IS NULL/IS NOT NULL
+SELECT id_funcionario, id_empresa_func FROM FUNCIONARIO
+    WHERE id_gerente IS NULL;
+
+SELECT id_funcionario, id_empresa_func FROM FUNCIONARIO
+    WHERE id_gerente IS NOT NULL;
+
+-- INNER JOIN
+SELECT F.id_funcionario, P.nome, P.data_de_nascimento, E.nome_fantasia
+    FROM FUNCIONARIO F INNER JOIN EMPRESA E ON F.id_empresa_func = E.id_pessoa_empresa
+        INNER JOIN PESSOA_FISICA P ON F.id_funcionario = P.id_pessoa_fisica;
+
+-- MAX
+SELECT numero_contrato, tipo_contrato, salario_bruto_mensal
+    FROM CONTRATO WHERE salario_bruto_mensal 
+        IN (SELECT MAX(salario_bruto_mensal) FROM CONTRATO);
+
+--MIN
+SELECT numero_contrato, tipo_contrato, salario_bruto_mensal
+    FROM CONTRATO WHERE salario_bruto_mensal 
+        IN (SELECT MIN(salario_bruto_mensal) FROM CONTRATO);
+
+-- AVG
+SELECT AVG(salario_bruto_mensal) FROM CONTRATO;
+
+--COUNT
+SELECT COUNT(*) FROM PESSOA_FISICA WHERE data_de_nascimento > '14-JAN-2010'; 
+
+-- FULL JOIN
+SELECT E.nome_fantasia, D.nome FROM EMPRESA E
+    FULL JOIN DEPARTAMENTO D ON D.id_empresa_dep = E.id_pessoa_empresa;
+
+--ORDER BY
+SELECT nome, data_de_nascimento FROM PESSOA_FISICA
+    ORDER BY data_de_nascimento DESC;
+
+-- GROUP BY
+SELECT situacao, COUNT(*) FROM DEPARTAMENTO GROUP BY situacao;
+
+-- SUBCONSULTA
+SELECT * FROM FUNCIONARIO WHERE id_empresa_func =
+    (SELECT id_pessoa_empresa FROM EMPRESA WHERE id_pessoa_empresa % 2 = 0);
+
+-- SUBCONSULTA IN
+SELECT * FROM FUNCIONARIO WHERE numero_departamento =
+    (SELECT numero_departamento FROM DEPARTAMENTO WHERE nome IN ('FINANÇAS', 'MARKETING');
+
+-- SUBCONSULTA ALL
+SELECT * FROM FUNCIONARIO WHERE numero_contrato_func =
+    (SELECT numero_contrato FROM CONTRATO WHERE salario_bruto_mensal 
+        > ALL (SELECT salario_bruto_mensal FROM CONTRATO WHERE tipo_contrato != 'ESTÁGIO');
+
+
+-- PL/SQL
+-- RECORD
+DECLARE
+   TYPE departamento_record IS RECORD (
+      departamento_nome  DEPARTAMENTO.nome%TYPE,
+      departamento_emp   DEPARTAMENTO.id_empresa_dep%TYPE
+    );
+    departament1 departamento_record; 
+    departament2 departamento_record;
+BEGIN
+   departament1.departamento_emp := 1;
+   departament2.departamento_nome := 'DESENVOLVIMENTO E PESQUISA';
+END;
+
+-- BLOCO ANONIMO
+DECLARE
+   TYPE pessoa_record IS RECORD (
+      pessoa_nome  PESSOA_FISICA.nome%TYPE,
+      pessoa_cpf   PESSOA_FISICA.cpf%TYPE
+    );
+    pessoa1 pessoa_record; 
+    pessoa2 pessoa_record;
+BEGIN
+   pessoa1.pessoa_cpf := '11111111111';
+   pessoa2.pessoa_nome := 'ANA BEATRIZ GOMES';
+END;
+
+-- PROCEDURE
+CREATE OR REPLACE PROCEDURE RegistraPonto(
+    protocolo_ponto PONTO.protocolo%TYPE,
+    data_atual_ponto PONTO.data_atual%TYPE,
+    funcionario_ponto PONTO.funcionario%TYPE
+) IS
+BEGIN
+    INSERT INTO PONTO(protocolo, data_atual, funcionario) VALUES(1, SYSDATE, 29);
+END;
+
+-- FUNCTION
+CREATE OR REPLACE FUNCTION greatKey RETURN INTEGER IS 
+keyValue INTEGER;
+BEGIN
+    SELECT max(id_pessoa) INTO keyValue FROM PESSOA;
+    keyValue := keyValue + 1;
+    RETURN keyValue;
+END greatKey;
+
+-- IF-THEN-ELSE
+DECLARE
+      tipoContratoPadrao VARCHAR2(80) := 'CLT 1';
+      contratoAtual VARCHAR2(80) := 'ESTÁGIO';
+  BEGIN
+      IF tipoContratoPadrao != contratoAtual THEN
+        UPDATE CONTRATO SET tipo_contrato = 'CLT 1' 
+        WHERE numero_contrato = 1;
+        
+      ELSIF tipoContratoPadrao = contratoAtual THEN
+        UPDATE CONTRATO SET tipo_contrato = 'CLT 2' 
+        WHERE numero_contrato = 1;
+   END IF;
+  END;
+
+-- WHEN
+SELECT tipo_contrato, salario_bruto_mensal, 
+CASE jornada_trabalho_semanal
+    WHEN 20 THEN jornada_trabalho_semanal * 2;
+    ELSE jornada_trabalho_semanal / 2;
+END
+FROM CONTRATO;
+  
+-- EXIT WHEN (Exemplo Simples)
+BEGIN
+    FOR v in 1..30 LOOP
+    exit WHEN(v = 15);
+    dbms_output.put_line(v);
+    END LOOP;
+END;
+
+-- FOR
+-- EXIT WHEN (Exemplo Simples)
+BEGIN
+    FOR v in 1..30 LOOP
+    dbms_output.put_line(v);
+    END LOOP;
+END;
