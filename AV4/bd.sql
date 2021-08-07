@@ -727,6 +727,12 @@ INSERT INTO PAGAMENTO VALUES(2, 19, '20-JULY-2021');
 INSERT INTO PAGAMENTO VALUES(2, 20, '20-MAY-2021');
 
 -- SQL
+-- Consulta extra
+-- Quais os funcionários que não bateram ponto e que moram em Recife.
+SELECT id_funcionario FROM FUNCIONARIO 
+    WHERE id_funcionario IN (SELECT id_pessoa FROM PESSOA 
+        WHERE cep = '12345678' AND id_pessoa -- Moram em recife 
+            NOT IN (SELECT funcionario FROM PONTO)) -- não bateram ponto.;
 --INDEX
 CREATE INDEX payment_index ON PAGAMENTO(data_pagamento);
 
@@ -934,7 +940,6 @@ BEGIN
 END;
 
 -- FOR
--- EXIT WHEN (Exemplo Simples)
 BEGIN
     FOR v in 1..30 LOOP
     dbms_output.put_line(v);
