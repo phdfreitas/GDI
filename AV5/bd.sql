@@ -1,3 +1,5 @@
+-- CRIAÇÃO DOS OBJETOS
+
 -- =-=-= Tipos que vão compor Pessoa
 CREATE OR REPLACE TYPE ENDERECO AS OBJECT(
     cep VARCHAR2(10),
@@ -90,3 +92,79 @@ CREATE OR REPLACE TYPE GERENTE UNDER FUNCIONARIO(
 /
 
 ALTER TYPE FUNCIONARIO ADD ATTRIBUTE (gerente_func REF GERENTE) CASCADE;
+
+CREATE OR REPLACE TYPE CONTA_BANCARIA AS OBJECT(
+    agencia INTEGER, 
+    numero_conta INTEGER,
+    numero_banco INTEGER, 
+    id_titular PESSOA 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE VANTAGEM AS OBJECT(
+    codigo INTEGER, 
+    descricao VARCHAR2(50),
+    valor NUMBER(10,2) 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE DESCONTO AS OBJECT(
+    codigo INTEGER, 
+    descricao VARCHAR2(50),
+    valor NUMBER(10,2) 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE PONTO AS OBJECT(
+    protocolo INTEGER,
+    data_atual DATE, 
+    ponto_funcionario FUNCIONARIO 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE ENTRADA AS OBJECT(
+    hora_entrada VARCHAR2(12), 
+    protocolo_ponto PONTO 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE SAIDA AS OBJECT(
+    hora_entrada VARCHAR2(12), 
+    protocolo_ponto PONTO 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE PARTICIPACAO AS OBJECT(
+    part_socio SOCIO, 
+    part_empresa EMPRESA 
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE BONUS AS OBJECT(
+    identificador INTEGER, 
+    porcentagem_bonus FLOAT(2), 
+    socio_empresa PARTICIPACAO 
+)NOT FINAL;
+/
+
+-- Confirmar o not instantiable
+CREATE OR REPLACE TYPE ACRESCIMO AS OBJECT(
+    codigo_vantagem VANTAGEM, 
+    num_contrato CONTRATO
+)NOT FINAL NOT INSTANTIABLE;
+/
+
+-- Confirmar o not instantiable
+CREATE OR REPLACE TYPE APLICACAO AS OBJECT(
+    codigo_vantagem DESCONTO, 
+    num_contrato CONTRATO
+)NOT FINAL NOT INSTANTIABLE;
+/
+
+CREATE OR REPLACE TYPE PAGAMENTO AS OBJECT(
+    pag_empresa EMPRESA, 
+    pag_funcionario FUNCIONARIO,
+    pag_data DATE
+)NOT FINAL;
+/
+-- FIM CRIAÇÃO OBJETOS
