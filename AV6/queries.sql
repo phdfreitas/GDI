@@ -32,19 +32,20 @@ SELECT COUNT(F.nome) AS QTD FROM TB_FUNCIONARIO F
     WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 1' AND  VALUE(F).id_empresa_func.id_pessoa = 9;
 
 -- Quantos funcionários ganham pelo menos 8000 reais. 
-SELECT COUNT(F.nome) AS NOME FROM TB_FUNCIONARIO F WHERE 
+SELECT COUNT(F.nome) AS QTD FROM TB_FUNCIONARIO F WHERE 
     VALUE(F).numero_contrato_func.salario_bruto_mensal >= 8000;
     
 -- Qual o dia de pagamento mais frequente?
-SELECT P.pag_data AS DATA_PAGAMENTO, COUNT(P.pag_data) AS PAGAMENTO FROM 
+SELECT P.pag_data AS DATA_PAGAMENTO, COUNT(P.pag_data) AS QNT_PAGAMENTOS FROM 
     TB_PAGAMENTO P GROUP BY P.pag_data ORDER BY P.pag_data DESC;
 
 -- Quais os diferentes tipos de contrato
 SELECT DISTINCT C.tipo_contrato AS TIPO FROM TB_CONTRATO C;
 
 -- Quais funcionários ganharam acrescimo e quais seus cargos 
-SELECT F.nome AS NOME, F.numero_contrato_func.cargo AS CARGO, A.codigo_vantagem.descricao FROM TB_FUNCIONARIO F, TB_ACRESCIMO A WHERE 
-    VALUE(F).numero_contrato_func.numero_contrato = A.num_contrato.numero_contrato ORDER BY CARGO;
+SELECT F.nome AS NOME, F.numero_contrato_func.cargo AS CARGO, A.codigo_vantagem.descricao AS VANTAGEM 
+    FROM TB_FUNCIONARIO F, TB_ACRESCIMO A WHERE 
+        VALUE(F).numero_contrato_func.numero_contrato = A.num_contrato.numero_contrato ORDER BY CARGO;
 
 -- Todos os (CLT 3) da empresa 6
 SELECT F.numero_contrato_func.cargo FROM TB_FUNCIONARIO F WHERE 
@@ -53,8 +54,14 @@ SELECT F.numero_contrato_func.cargo FROM TB_FUNCIONARIO F WHERE
 -- Selecionar todas as empresas que tem dept de mkt
 SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAMENTO D WHERE D.nome = 'MARKETING';
 
+-- Os departamentos da empresa 1 usando REF 
+SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAMENTO D 
+    WHERE D.empresa_dep = (SELECT REF(E) FROM TB_EMPRESA E WHERE id_pessoa = 1);
+
 -- CONSULTAS NESTED_TABLE
     SELECT * FROM TABLE(SELECT E.lista_emails FROM TB_EMAILS_FUNCIONARIOS E WHERE E.id_pessoa_email = 17);
 
     SELECT E.id_pessoa_email, T.* FROM TB_EMAILS_FUNCIONARIOS E, TABLE(E.lista_emails) T;
 
+-- CONSULTA VARRAY
+SELECT F.id_func, T.* FROM TB_TELEFONES_FUNC F, TABLE(F.lista_telefones) T ORDER BY F.id_func;
