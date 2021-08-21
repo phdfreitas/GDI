@@ -208,29 +208,71 @@ db.consultas.insert([
         dataConsulta: "04/09/2021",
         paciente: 1,
         dentista: 1,
-        procedimentos: [{
-            procedimento1: 1,
-            procedimento2: 5,
-            procedimento2: 4
-        }]
+        procedimentos: [1, 5, 4]
     },
     {
         _id: 2,
         dataConsulta: "01/09/2021",
         paciente: 2,
         dentista: 1,
-        procedimentos: [{
-            procedimento1: 1,
-            procedimento2: 4
-        }]
+        procedimentos: [1,4]
     },
     {
         _id: 3,
         dataConsulta: "01/09/2021",
         paciente: 4,
         dentista: 2,
-        procedimentos: [{
-            procedimento1: 2
-        }]
+        procedimentos: [2]
     }
 ])
+// Corrigindo array de procedimentos
+//db.consultas.update({paciente: 1}, {$set: {procedimentos: [1, 5, 4]}})
+//db.consultas.update({paciente: 2}, {$set: {procedimentos: [1, 4]}})
+//db.consultas.update({paciente: 4}, {$set: {procedimentos: [2]}})
+
+// Queries
+
+// 3.size
+db.consultas.aggregate([
+    {
+        $project:{
+            paciente: 1,
+            nProcedimentos: {$size: "$procedimentos"}
+        }
+    }
+])
+
+// 9.sum
+db.procedimentos.aggregate(
+    [
+        {
+            group:{
+                _id: 1, totalProcedimentos: {$sum: "$valorProcedimento"}
+            }
+        }
+    ]
+)
+
+// 10.count
+db.funcionarios.aggregate(
+    [
+      {
+        $match: {
+          salario: {
+            $gt: 3000
+          }
+        }
+      },
+      {
+        $count: "privilegiados"
+      }
+    ]
+)
+
+// 13.exists
+db.funcionarios.find( { cro: { $exists: true, $ne: ""}}).pretty()
+
+// 16.where
+db.pacientes.find({$where: function(){
+    return this.sexo == "M"
+}}).pretty()
