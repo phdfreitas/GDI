@@ -276,3 +276,35 @@ db.funcionarios.find( { cro: { $exists: true, $ne: ""}}).pretty()
 db.pacientes.find({$where: function(){
     return this.sexo == "M"
 }}).pretty()
+
+// 17.mapReduce
+function map(){
+    emit (this.dentista, this.paciente)
+}
+
+function reduce(key, value){
+    return value.join()
+}
+
+db.consultas.mapReduce(map, reduce, {out: {inline: 1}})
+
+// 22.text
+db.procedimentos.createIndex( { tipoProcedimento: "text"} )
+db.procedimentos.find({$text: {$search: "raspagem dentária"}})
+
+// 28.cond
+db.funcionarios.aggregate(
+    [
+       {
+          $project:
+            {
+              nome:1, 
+              salario: 1,
+              aumento:
+                {
+                  $cond: { if: { $eq: [ "$salario", 5500 ] }, then: 10, else: 30 }
+                }
+            }
+       }
+    ]
+)
