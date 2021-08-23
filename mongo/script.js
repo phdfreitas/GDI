@@ -223,6 +223,13 @@ db.consultas.insert([
         paciente: 4,
         dentista: 2,
         procedimentos: [2]
+    },
+    {
+        _id: 4,
+        dataConsulta: "03/11/2021",
+        paciente: 1,
+        dentista: 1,
+        procedimentos: [1]
     }
 ])
 // Corrigindo array de procedimentos
@@ -231,6 +238,13 @@ db.consultas.insert([
 //db.consultas.update({paciente: 4}, {$set: {procedimentos: [2]}})
 
 // Queries
+//1.use - seleciona um banco de dados
+use nome_do_banco;
+
+// 4, 5 e 15
+db.consultas.aggregate([
+    { $match: {dentista: 1}}, { $limit : 1 }
+])
 
 // 3.size
 db.consultas.aggregate([
@@ -241,6 +255,9 @@ db.consultas.aggregate([
         }
     }
 ])
+
+//$6.project - mostra o documento apenas com as especificações pedidas. mostrar apenas o nome, email e telefone do pacinte sem o id
+db.pacientes.aggregate([{ $project: {_id: 0, nome: 1, email: 1, telefone: 1}}]).pretty()
 
 // 9.sum
 db.procedimentos.aggregate(
@@ -269,6 +286,9 @@ db.funcionarios.aggregate(
     ]
 )
 
+//12.avg - Media salarial agrupado por genero
+db.funcionarios.aggregate([{ $group: {_id:"$sexo", MediaSalarial: {$avg:"$salario"}} }])
+
 // 13.exists
 db.funcionarios.find( { cro: { $exists: true, $ne: ""}}).pretty()
 
@@ -287,10 +307,49 @@ function reduce(key, value){
 }
 
 db.consultas.mapReduce(map, reduce, {out: {inline: 1}})
+// fim 17 e 18
+
+
+//21.set
+db.pacientes.insert({ 
+    _id: 5, 
+    nome: "Maria Garibalda", 
+    cpf: "495-375-284-43", 
+    dataNascimento: "26/04/1994", 
+    email: "mg@gmail.com", 
+    telefone: 94654599436, 
+    sexo: "F", 
+    endereco:[{
+        cep: "948593958", 
+        rua: "Rua 20", 
+        bairro: "Bairro 40", 
+        cidade: "Recife", 
+        estado: "PE",
+    }
+]})
+
+db.pacientes.update({_id: 5}, {$set: {nome: "João Paulino", email: "jp@gmail.com", sexo: "M"}})
+// Fim 21
+
 
 // 22.text
 db.procedimentos.createIndex( { tipoProcedimento: "text"} )
 db.procedimentos.find({$text: {$search: "raspagem dentária"}})
+
+//23.search
+db.procedimentos.find({
+    $text: { $search: "Prótese Tártaro" }
+})
+
+//24.filter - Retorna informações de acordo com as condiçoes sujeridas. mostrar o id do dentista e mostrar os que realizaram o procedimento 2
+db.consultas.aggregate([{"$project": {"dentista": 1,"procedimentos": {"$filter": {"input": "$procedimentos", "as": "pro", "cond": { "$eq": ["$$pro", 2]}}}}}])
+
+//$26.save - Faz um update no documento ou insereum novo documento. adiciona um novo item em consultas
+db.consultas.save( { _id: 4, dataConsulta: "07/10/2021", paciente: 3, dentista: 3, procedimentos: [2, 3]})
+
+//27.renameCollection- renomeia uma coleção. Renomeando procedimentos para exames
+db.procedimentos.renameCollection("exames")
+
 
 // 28.cond
 db.funcionarios.aggregate(
@@ -307,4 +366,17 @@ db.funcionarios.aggregate(
             }
        }
     ]
+)
+
+//29.lookup - Faz um left outer join de uma coleção da mesma base de dados. Printar as informações do paciente de uma determinada consulta
+db.consultas.aggregate([{ $lookup: { 
+    from:"pacientes", 
+    localField: "paciente", 
+    foreignField: "_id", 
+    as: "inform_paciente"}}])
+
+//31.addtoset    
+db.consultas.update(
+    {_id:4},
+    {$addToSet:{procedimentos:{$each:["3","5"]}}}
 )
