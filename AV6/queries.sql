@@ -16,52 +16,55 @@ SELECT D.numero AS NUMERO, D.nome NOME, D.empresa_dep.nome_fantasia AS EMPRESA
 SELECT F.nome AS NOME, VALUE(F).numero_contrato_func.salario_bruto_mensal AS SALARIO 
     FROM TB_FUNCIONARIO F WHERE VALUE(F).numero_contrato_func.salario_bruto_mensal BETWEEN 1500 AND 3000; 
 
--- Nome e valor do investimento dos sócios com data de afiliação de 2018 para trás. 
-SELECT S.nome AS NOME, S.valor_investimento FROM TB_SOCIO S 
-    WHERE data_afiliacao < '01-JAN-2019';
+
+--testar queries
+-- 5 quais sócios investem na empresa antes de 2019
+
+SELECT S.nome AS NOME FROM TB_SOCIO S WHERE VALUE(S).data_afiliacao < 01 JAN-2019; --checar formato da data
 
 -- quais sócios não moram em SP
 SELECT S.nome AS NOME FROM TB_SOCIO S WHERE VALUE(S).endereco_pessoa.estado NOT IN ('SP');
 
--- Funcionários de cargo clt3 em ordem alfabética
-SELECT F.nome AS NOME, VALUE(F).numero_contrato_func.salario_bruto_mensal AS SALARIO 
-    FROM TB_FUNCIONARIO F WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 3' ORDER BY NOME;
+-- gerentes (clt3) em ordem alfabética
+SELECT F.nome AS NOME FROM TB_FUNCIONARIO F WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 3' ORDER BY NOME;
 
--- Quantos funcionários DA DISNEY (id = 9) são (clt1)
-SELECT COUNT(F.nome) AS QTD FROM TB_FUNCIONARIO F 
-    WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 1' AND  VALUE(F).id_empresa_func.id_pessoa = 9;
+-- quantos funcionários DA DISNEY (id = 9) são vendedores (clt1)
+SELECT COUNT(F.nome) AS NOME FROM TB_FUNCIONARIO F WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 1' AND  VALUE(F).id_empresa_func = 9;
 
--- Quantos funcionários ganham pelo menos 8000 reais. 
-SELECT COUNT(F.nome) AS QTD FROM TB_FUNCIONARIO F WHERE 
-    VALUE(F).numero_contrato_func.salario_bruto_mensal >= 8000;
-    
--- Qual o dia de pagamento mais frequente?
-SELECT P.pag_data AS DATA_PAGAMENTO, COUNT(P.pag_data) AS QNT_PAGAMENTOS FROM 
-    TB_PAGAMENTO P GROUP BY P.pag_data ORDER BY P.pag_data DESC;
+-- quantos funcionários largam antes das 16h no dia 28/02
+SELECT COUNT(S.protocolo_ponto) AS protocolo_ponto FROM TB_SAIDA S WHERE VALUE(S).hora_saida < 16:00:00; --checar formato da hora
 
--- Quais os diferentes tipos de contrato
-SELECT DISTINCT C.tipo_contrato AS TIPO FROM TB_CONTRATO C;
+-- 10) quantos funcionários ganham pelo menos 8000/mes
 
--- Quais funcionários ganharam acrescimo e quais seus cargos 
-SELECT F.nome AS NOME, F.numero_contrato_func.cargo AS CARGO, A.codigo_vantagem.descricao AS VANTAGEM 
-    FROM TB_FUNCIONARIO F, TB_ACRESCIMO A WHERE 
-        VALUE(F).numero_contrato_func.numero_contrato = A.num_contrato.numero_contrato ORDER BY CARGO;
+SELECT COUNT(F.nome) AS NOME FROM TB_FUNCIONARIO F VALUE(F).numero_contrato_func.salario_bruto_mensal >= 8000
 
--- Todos os (CLT 3) da empresa 6
-SELECT F.numero_contrato_func.cargo FROM TB_FUNCIONARIO F WHERE 
-    VALUE(F).numero_contrato_func.cargo = 'CLT 3' AND VALUE(F).id_empresa_func.id_pessoa = 6;
+-- qual o dia de pagamento mais frequente?
 
--- Selecionar todas as empresas que tem dept de mkt
-SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAMENTO D WHERE D.nome = 'MARKETING';
+SELECT COUNT(P.pag_data) AS PAGAMENTO FROM TB_PAGAMENTO P GROUP BY P.pag_data ORDER BY PAGAMENTO DESC LIMIT 1;
 
--- Os departamentos da empresa 1 usando REF 
-SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAMENTO D 
-    WHERE D.empresa_dep = (SELECT REF(E) FROM TB_EMPRESA E WHERE id_pessoa = 1);
+-- quais os diferentes tipos de contrato
+
+SELECT DISTINCT C.tipo_contrato AS TIPO FROM TB_CONTRATO;
+
+-- quantos funcionários são pj e tem benefícios listados em ordem alfabética
+
+SELECT F.nome AS NOME FROM TB_FUNCIONARIO F WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 3' ORDER BY NOME;
+
+-- quais funcionários ganharam acrescimo e quais os cargos
+SELECT F.nome AS NOME, F.numero_contrato_func.cargo AS CARGO, A.num_contrato FROM TB_FUNCIONARIO F, TB_ACRESCIMO A WHERE 
+    VALUE(F).numero_contrato_func.numero_contrato = A.num_contrato
+        ORDER BY CARGO;
+
+-- 15) selecionar todos os gerentes (CLT 3) da empresa 6
+SELECT F.numero_contrato_func.cargo FROM TB_FUNCIONARIO AS F WHERE VALUE(F).numero_contrato_func.cargo = 'CLT 3' 
+    INNER JOIN F.id_empresa_func = 6;
+
+-- selecionar todas as empresas que tem dept de mkt
+SELECT E.nome_fantasia AS NOME, D.nome FROM TB_EMPRESA E, TB_DEPARTAMENTO AS D WHERE VALUE(D).empresa_dep = E.id 
+    INNER JOIN D.nome = 'MARKETING';
+
 
 -- CONSULTAS NESTED_TABLE
     SELECT * FROM TABLE(SELECT E.lista_emails FROM TB_EMAILS_FUNCIONARIOS E WHERE E.id_pessoa_email = 17);
 
     SELECT E.id_pessoa_email, T.* FROM TB_EMAILS_FUNCIONARIOS E, TABLE(E.lista_emails) T;
-
--- CONSULTA VARRAY
-SELECT F.id_func, T.* FROM TB_TELEFONES_FUNC F, TABLE(F.lista_telefones) T ORDER BY F.id_func;
