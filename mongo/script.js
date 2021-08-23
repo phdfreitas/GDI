@@ -223,6 +223,13 @@ db.consultas.insert([
         paciente: 4,
         dentista: 2,
         procedimentos: [2]
+    },
+    {
+        _id: 4,
+        dataConsulta: "03/11/2021",
+        paciente: 1,
+        dentista: 1,
+        procedimentos: [1]
     }
 ])
 // Corrigindo array de procedimentos
@@ -231,6 +238,11 @@ db.consultas.insert([
 //db.consultas.update({paciente: 4}, {$set: {procedimentos: [2]}})
 
 // Queries
+
+//2.find & 4.aggreagate & 5.match
+db.consultas.aggregate([
+    { $match: {dentista: "1"}}, { $limit : 2 }
+])
 
 // 3.size
 db.consultas.aggregate([
@@ -272,7 +284,7 @@ db.funcionarios.aggregate(
 // 13.exists
 db.funcionarios.find( { cro: { $exists: true, $ne: ""}}).pretty()
 
-// 16.where
+// 16.where 19.pretty
 db.pacientes.find({$where: function(){
     return this.sexo == "M"
 }}).pretty()
@@ -288,9 +300,26 @@ function reduce(key, value){
 
 db.consultas.mapReduce(map, reduce, {out: {inline: 1}})
 
+//18 function
+function patientLog()
+exports = function(patient){
+    $lookup:{
+        from: "procedimentos", 
+        localField: "procedimentos",
+        foreignField: "valorProcedimento", 
+        as: "conta" :{$sum: $valorProcedimento}
+    }
+}
+//colca no realm e chama por fora
+
 // 22.text
 db.procedimentos.createIndex( { tipoProcedimento: "text"} )
 db.procedimentos.find({$text: {$search: "raspagem dentária"}})
+
+//23. search
+db.procedimentos.find({
+    $text: { $search: "Prótese Tártaro" }
+})
 
 // 28.cond
 db.funcionarios.aggregate(
@@ -308,3 +337,9 @@ db.funcionarios.aggregate(
        }
     ]
 )
+//31 adtoset
+db.consultas.update(
+    {_id:4},
+    {$addToSet:{procedimentos:{$each:["3","5"]}}}
+)
+    
