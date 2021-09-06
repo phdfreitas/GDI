@@ -58,6 +58,9 @@ SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAME
 SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAMENTO D 
     WHERE D.empresa_dep = (SELECT REF(E) FROM TB_EMPRESA E WHERE id_pessoa = 1);
 
+
+SELECT S.numero_registro, S.porcetagem_nos_lucros, T.* FROM TB_SOCIO S, TABLE (SELECT E.lista_emails FROM TB_EMAILS_FUNCIONARIOS) T;
+
 -- CONSULTAS NESTED_TABLE
     SELECT * FROM TABLE(SELECT E.lista_emails FROM TB_EMAILS_FUNCIONARIOS E WHERE E.id_pessoa_email = 17);
 
@@ -65,3 +68,42 @@ SELECT DEREF(empresa_dep).nome_fantasia AS EMPRESA, D.nome DEP FROM TB_DEPARTAME
 
 -- CONSULTA VARRAY
 SELECT F.id_func, T.* FROM TB_TELEFONES_FUNC F, TABLE(F.lista_telefones) T ORDER BY F.id_func;
+
+SELECT D.nome, VALUE(D).empresa_dep.nome_fantasia AS EMPRESA FROM TB_DEPARTAMENTO D
+    WHERE situacao = 'A' ORDER BY D.nomeDepartamento();
+
+DECLARE
+mb TP_CONTRATO;
+m NUMBER;
+BEGIN
+SELECT VALUE(C) INTO mb FROM TB_CONTRATO C 
+    WHERE C.numero_contrato = 1;
+
+SELECT F.comparaSalario(mb) INTO m FROM TB_CONTRATO F 
+    WHERE F.numero_contrato = 2;
+
+END;
+/
+
+CREATE OR REPLACE TYPE TP_SOCIO UNDER TP_PESSOA_FISICA(
+    numero_registro INTEGER,
+    data_afiliacao DATE,
+    valor_investimento NUMBER(10,2), 
+    porcentagem_nos_lucros FLOAT(2)
+    
+    FINAL MAP MEMBER FUNCTION percentSocio RETURN FLOAT
+    
+)NOT FINAL;
+/
+
+CREATE OR REPLACE TP BODY TP_SOCIO AS 
+    FINAL MAP MEMBER FUNCTION percentSocio RETURN FLOAT IS 
+        d FLOAT := porcentagem_nos_lucros
+    BEGIN
+        RETURN d;
+    END;
+END;
+/
+
+SELECT VALUE(S).numero_registro, VALUE(S).porcetagem_nos_lucros, VALUE(S).lista_emails FROM TB_SOCIO S
+    ORDER BY S.percentSocio(); 

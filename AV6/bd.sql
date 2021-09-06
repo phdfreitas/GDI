@@ -1,5 +1,4 @@
 -- CRIAÇÃO DOS OBJETOS
-
 CREATE OR REPLACE TYPE TP_ENDERECO AS OBJECT(
     cep VARCHAR2(10),
     rua VARCHAR2(100),
@@ -38,8 +37,8 @@ CREATE OR REPLACE TYPE BODY TP_PESSOA AS
     MEMBER PROCEDURE infoPessoa (SELF TP_PESSOA) IS
         BEGIN
             DBMS_OUTPUT.PUT_LINE('INFORMAÇÕES DA PESSOA');
-            DBMS_OUTPUT.PUT_LINE('ID PESSOA: ' || id_pessoa);
-            DBMS_OUTPUT.PUT_LINE('ENDERECO: ' || endereco_pessoa);
+            DBMS_OUTPUT.PUT_LINE('ID PESSOA: ' || TO_CHAR(id_pessoa));
+            DBMS_OUTPUT.PUT_LINE('ENDERECO: ' || endereco_pessoa.estado);
         END;
 END;
 /
@@ -65,8 +64,8 @@ CREATE OR REPLACE TYPE BODY TP_PESSOA_FISICA AS
     OVERRIDING MEMBER PROCEDURE infoPessoa (SELF TP_PESSOA_FISICA) IS
         BEGIN
             DBMS_OUTPUT.PUT_LINE('INFORMAÇÕES DA PESSOA');
-            DBMS_OUTPUT.PUT_LINE('ID PESSOA: ' || id_pessoa);
-            DBMS_OUTPUT.PUT_LINE('ENDERECO: ' || endereco_pessoa);
+            DBMS_OUTPUT.PUT_LINE('ID PESSOA: ' || TO_CHAR(id_pessoa));
+            DBMS_OUTPUT.PUT_LINE('ENDERECO: ' || endereco_pessoa.estado);
             DBMS_OUTPUT.PUT_LINE('NOME: ' || nome);
             DBMS_OUTPUT.PUT_LINE('CPF: ' || cpf);
             DBMS_OUTPUT.PUT_LINE('DATA DE NASCIMENTO: ' || TO_CHAR(data_de_nascimento));
@@ -81,6 +80,15 @@ CREATE OR REPLACE TYPE TP_SOCIO UNDER TP_PESSOA_FISICA(
     valor_investimento NUMBER(10,2), 
     porcentagem_nos_lucros FLOAT(2)
 )NOT FINAL;
+/
+
+CREATE OR REPLACE TYPE BODY TP_DEPARTAMENTO AS
+    FINAL MAP MEMBER FUNCTION nomeDepartamento RETURN VARCHAR2 IS
+        d VARCHAR2(80) := porcentagem_nos_lucros;
+    BEGIN
+        RETURN d;
+    END;
+END;
 /
 
 CREATE OR REPLACE TYPE TP_DEPARTAMENTO AS OBJECT(
@@ -112,7 +120,7 @@ CREATE OR REPLACE TYPE TP_CONTRATO AS OBJECT(
     salario_bruto_mensal NUMBER(10,2),
     jornada_trabalho_semanal INTEGER,
 
-    ORDER MEMBER FUNCTION comparaSalario (f TP_CONTRATO) RETURN INTEGER,
+    ORDER MEMBER FUNCTION comparaSalario (c TP_CONTRATO) RETURN INTEGER,
 
     CONSTRUCTOR FUNCTION TP_CONTRATO(numero_contrato INTEGER, tipo_contrato VARCHAR2, data_admissao DATE, 
         cargo VARCHAR2, salario_bruto_mensal NUMBER, jornada_trabalho_semanal INTEGER)
@@ -946,3 +954,13 @@ INSERT INTO TB_EMAILS_FUNCIONARIOS VALUES
 -- VALUE
 SELECT VALUE(E).id_pessoa AS ID, VALUE(E).nome_fantasia AS EMPRESA FROM TB_EMPRESA E;
 SELECT VALUE(F).id_empresa_func.nome_fantasia AS EMPRESA, VALUE(F).nome AS FUNCIONARIO FROM TB_FUNCIONARIO F;
+
+-- EXTRAS
+DECLARE
+    mb TP_PESSOA_FISICA;
+    BEGIN
+        SELECT VALUE(P) INTO mb FROM TB_FUNCIONARIO P
+        WHERE P.id_pessoa = 30;
+    mb.infoPessoa();
+END;
+/
