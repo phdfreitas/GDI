@@ -263,7 +263,7 @@ db.pacientes.aggregate([{ $project: {_id: 0, nome: 1, email: 1, telefone: 1}}]).
 db.procedimentos.aggregate(
     [
         {
-            group:{
+            $group:{
                 _id: 1, totalProcedimentos: {$sum: "$valorProcedimento"}
             }
         }
@@ -276,7 +276,7 @@ db.funcionarios.aggregate(
       {
         $match: {
           salario: {
-            $gt: 3000
+            $gte: 3000
           }
         }
       },
@@ -286,11 +286,23 @@ db.funcionarios.aggregate(
     ]
 )
 
+// 11.max
+db.funcionarios.aggregate([
+    {
+        $group: {
+            _id: "$sexo", MaxSalario:{$max: "$salario"}
+        }
+    }
+])
+
 //12.avg - Media salarial agrupado por genero
 db.funcionarios.aggregate([{ $group: {_id:"$sexo", MediaSalarial: {$avg:"$salario"}} }])
 
 // 13.exists
 db.funcionarios.find( { cro: { $exists: true, $ne: ""}}).pretty()
+
+//14.sort
+db.funcionarios.find( ).sort( { _id: -1 })
 
 // 16.where
 db.pacientes.find({$where: function(){
@@ -309,6 +321,8 @@ function reduce(key, value){
 db.consultas.mapReduce(map, reduce, {out: {inline: 1}})
 // fim 17 e 18
 
+//20.all
+db.consultas.find( { procedimentos: { $all: [ 1, 4 ] } })
 
 //21.set
 db.pacientes.insert({ 
@@ -337,7 +351,7 @@ db.procedimentos.createIndex( { tipoProcedimento: "text"} )
 db.procedimentos.find({$text: {$search: "raspagem dentária"}})
 
 //23.search
-db.procedimentos.find({
+db.procedimentos.findOne({
     $text: { $search: "Prótese Tártaro" }
 })
 
